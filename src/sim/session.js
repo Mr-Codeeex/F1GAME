@@ -215,7 +215,7 @@ export class Session {
   }
 
   fuelPerLap() { return 2.05 * this.track.length / 5000; }
-  pitLoss() { return 20 + this.track.pit.length / 30; }
+  pitLoss() { return this.track.pit.length * (1 / 22.2 - 1 / 75) + 3; }
 
   fitTyres(c, compound, used) {
     c.car.tyres = new TyreSet(compound, { startTemp: COMPOUNDS[compound].wet ? 45 : 72, used });
@@ -335,6 +335,7 @@ export class Session {
       else if (!c.isPlayer && !c.retired && c.ai.stuckTimer > 6 && !c.pit.phase) this.recoverCar(c);
       this.updateTiming(c);
       this.updatePit(c, dt);
+      if (c.garageAt != null && this.time >= c.garageAt) { c.garageAt = null; this.toGarage(c); }
     }
     if (this.stepCount % 2 === 0) this.collisions(running);
     if (this.safetyCar) this.updateSafetyCar(dt);
@@ -1041,7 +1042,15 @@ export class Session {
       c.car.applyDamage((e.impact - 9) * 0.05 * mul, front ? 'front' : 'rear');
       if (c.isPlayer && c.car.damage.frontWing > 0.3) this.say(`Front wing damage ${Math.round(c.car.damage.frontWing * 100)}%. ${c.car.damage.frontWing > 0.5 ? 'Box this lap for a new nose.' : 'We can continue.'}`, 2, 'warning');
     }
-    if (e.impact > 26 && dmg === 'full' && this.type !== 'timetrial') this.retire(c, 'Accident');
+    if (e.impact > 26 && dmg === 'full') {
+      if (this.type === 'race') this.retire(c, 'Accident');
+      else if (this.type !== 'timetrial' && c.garageAt == null) {
+        // practice / qualifying: the car is recovered and repaired in the garage
+        c.garageAt = this.time + 3;
+        c.lapValid = false;
+        if (c.isPlayer) this.say('Big impact! The car will be recovered to the garage.', 2, 'warning');
+      }
+    }
   }
 
   // ------------------------------------------------------------------ safety car / VSC

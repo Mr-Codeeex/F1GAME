@@ -26,7 +26,7 @@ export class GameRenderer {
     this.renderer.shadowMap.enabled = q !== 'low';
     this.renderer.shadowMap.type = q === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(62, 1, 0.1, 9000);
+    this.camera = new THREE.PerspectiveCamera(62, 1, 0.25, 7000);
     this.cameraMode = 'chase';
     this.camState = { pos: new THREE.Vector3(), yaw: 0, init: false, shake: 0 };
     this.carViews = new Map();
@@ -45,6 +45,7 @@ export class GameRenderer {
     this.scene.traverse((o) => { if (o.geometry && !o.geometry.userData?.shared) o.geometry.dispose?.(); });
     this.scene.clear();
     this.carViews.clear();
+    this.crews = null;
     this.ghost = null;
     this.scView = null;
   }
@@ -56,7 +57,7 @@ export class GameRenderer {
     this.textures = makeTextures(theme, this.quality);
     // sky dome
     this.skyUniforms = { top: { value: SKY_CLEAR.top.clone() }, horizon: { value: SKY_CLEAR.horizon.clone() }, sunDir: { value: new THREE.Vector3(0.4, 0.6, 0.3).normalize() }, sunAmt: { value: 1 } };
-    const sky = new THREE.Mesh(new THREE.SphereGeometry(8000, 32, 16), new THREE.ShaderMaterial({
+    const sky = new THREE.Mesh(new THREE.SphereGeometry(6500, 32, 16), new THREE.ShaderMaterial({
       uniforms: this.skyUniforms,
       vertexShader: 'varying vec3 vDir; void main(){ vDir = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position,1.0); gl_Position = p.xyww; }',
       fragmentShader: `uniform vec3 top; uniform vec3 horizon; uniform vec3 sunDir; uniform float sunAmt; varying vec3 vDir;
@@ -115,6 +116,8 @@ export class GameRenderer {
     this.session = session;
     for (const cv of this.carViews.values()) this.scene.remove(cv.group);
     this.carViews.clear();
+    for (const g of this.crews?.values() ?? []) this.scene.remove(g);
+    this.crews = null;
     for (const c of session.comps) {
       const far = this.quality === 'low' && !c.isPlayer;
       const cv = new CarView(c.team.colors, { envMap: this.envMap, lowDetail: far });
@@ -146,6 +149,45 @@ export class GameRenderer {
     this.scene.add(g.group);
   }
 
+  crewFor(c) {
+    this.crews = this.crews ?? new Map();
+    let g = this.crews.get(c.id);
+    if (g) return g;
+    g = new THREE.Group();
+    const suit = new THREE.MeshStandardMaterial({ color: c.team.colors[0], roughness: 0.7 });
+    const helm = new THREE.MeshStandardMaterial({ color: c.team.colors[1], roughness: 0.4 });
+    const body = new THREE.BoxGeometry(0.42, 1.1, 0.32); body.translate(0, 0.55, 0);
+    const head = new THREE.SphereGeometry(0.15, 8, 6); head.translate(0, 1.27, 0);
+    // two mechanics per wheel, jack men front and rear, lollipop, wing man
+    const spots = [[2.2, -1.3], [1.6, -1.4], [2.2, 1.3], [1.6, 1.4], [-1.4, -1.3], [-2.0, -1.35], [-1.4, 1.3], [-2.0, 1.35], [3.4, 0], [-3.3, 0], [4.2, -1.6], [2.9, 1.0]];
+    for (const [x, z] of spots) {
+      const m = new THREE.Group();
+      m.add(new THREE.Mesh(body, suit), new THREE.Mesh(head, helm));
+      m.position.set(x, 0, z);
+      m.rotation.y = Math.atan2(-z, x === 0 ? 1 : -x) + Math.PI / 2;
+      g.add(m);
+    }
+    g.visible = false;
+    this.scene.add(g);
+    this.crews.set(c.id, g);
+    return g;
+  }
+
+  updateCrews(session, dt) {
+    const t = performance.now() / 1000;
+    for (const c of session.comps) {
+      const inBox = c.status === 'running' && c.pit.phase === 'box';
+      if (!inBox && !this.crews?.has(c.id)) continue;
+      const g = this.crewFor(c);
+      g.visible = inBox;
+      if (!inBox) continue;
+      g.position.set(c.car.x, 0, c.car.z);
+      g.rotation.y = -c.car.yaw;
+      g.children.forEach((m, k) => { m.position.y = Math.max(0, Math.sin(t * 9 + k) * 0.05); });
+    }
+    void dt;
+  }
+
   cycleCamera(dir = 1) {
     const i = CAMERA_MODES.indexOf(this.cameraMode);
     this.cameraMode = CAMERA_MODES[(i + dir + CAMERA_MODES.length) % CAMERA_MODES.length];
@@ -171,6 +213,8 @@ export class GameRenderer {
       if (c === focus) cv.group.children[4].visible = this.cameraMode !== 'cockpit';
       if (opts.effects !== false && c.car.speed > 3) this.effects.emitCar(c.car, dt, wet, c.car.wheelSurf);
     }
+    // pit crews for cars stationary in their box
+    this.updateCrews(session, dt);
     // safety car
     if (session.safetyCar) { this.scView.group.visible = true; this.scView.update(session.safetyCar.car, dt); }
     else this.scView.group.visible = false;
@@ -215,13 +259,17 @@ export class GameRenderer {
     const cam = this.camera;
     const st = this.camState;
     if (!focus || focus.status === 'garage') {
-      // orbit the pit building / track overview
+      // garage view: stand in the pit lane looking at our team's garage
       const t = this.track;
-      const p = t.toWorld(t.pit.entryS + t.pit.boxStart + 40, t.pit.laneOffset - 2);
-      const a = performance.now() / 9000;
-      cam.position.set(p.x + Math.cos(a) * 45, 14, p.z + Math.sin(a) * 45);
-      cam.lookAt(p.x, 2, p.z);
-      cam.fov = 55; cam.updateProjectionMatrix();
+      const ti = this.garageTeam ?? 0;
+      const ps = t.boxProgress(ti);
+      const s0 = t.pit.entryS + ps;
+      const a = Math.sin(performance.now() / 4000) * 6;
+      const eye = t.toWorld(s0 - 10 + a, t.pit.laneOffset - 3);
+      const door = t.toWorld(s0, t.pit.laneOffset + 9.9);
+      cam.position.set(eye.x, 2.6, eye.z);
+      cam.lookAt(door.x, 2.2, door.z);
+      cam.fov = 60; cam.updateProjectionMatrix();
       return;
     }
     const car = focus.car;

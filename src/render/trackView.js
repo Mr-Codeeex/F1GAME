@@ -110,9 +110,9 @@ export class TrackView {
     // ground
     const groundTex = T.grass.clone(); groundTex.needsUpdate = true;
     groundTex.repeat.set(size / 24, size / 24);
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(size, size), this.mat(groundTex, { roughness: 1 }));
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(size, size), this.mat(groundTex, { roughness: 1, po: 6 }));
     ground.rotation.x = -Math.PI / 2;
-    ground.position.set(cx, -0.03, cz);
+    ground.position.set(cx, -0.3, cz);
     ground.receiveShadow = true;
     this.group.add(ground);
     this.ground = ground;
@@ -122,7 +122,7 @@ export class TrackView {
       const wt = T.water.clone(); wt.needsUpdate = true; wt.repeat.set(60, 20);
       const water = new THREE.Mesh(new THREE.PlaneGeometry(size * 1.5, 1500), new THREE.MeshStandardMaterial({ map: wt, roughness: 0.15, metalness: 0.3 }));
       water.rotation.x = -Math.PI / 2;
-      water.position.set(cx, -0.01, b.minZ - 400 - 750);
+      water.position.set(cx, -0.25, b.minZ - 400 - 750);
       this.group.add(water);
       this.water = water;
     }
@@ -134,13 +134,13 @@ export class TrackView {
 
     // edge lines
     const lineMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
-    this.add(ribbon(t, 0, n, () => -hw + 0.1, () => -hw + 0.32, 0.005), lineMat);
-    this.add(ribbon(t, 0, n, () => hw - 0.32, () => hw - 0.1, 0.005), lineMat);
+    this.add(ribbon(t, 0, n, () => -hw + 0.1, () => -hw + 0.32, 0.03), lineMat);
+    this.add(ribbon(t, 0, n, () => hw - 0.32, () => hw - 0.1, 0.03), lineMat);
 
     // kerbs
     const kerbMat = this.mat(T.kerb, { roughness: 0.7, po: -3 });
-    for (const [i0, c] of runs(n, (i) => t.kerbL[i] === 1)) this.add(ribbon(t, i0, c, () => -hw - KERB_WIDTH, () => -hw + 0.05, 0.02, { vScale: 0.25, uSpan: true }), kerbMat);
-    for (const [i0, c] of runs(n, (i) => t.kerbR[i] === 1)) this.add(ribbon(t, i0, c, () => hw - 0.05, () => hw + KERB_WIDTH, 0.02, { vScale: 0.25, uSpan: true }), kerbMat);
+    for (const [i0, c] of runs(n, (i) => t.kerbL[i] === 1)) this.add(ribbon(t, i0, c, () => -hw - KERB_WIDTH, () => -hw + 0.05, 0.05, { vScale: 0.25, uSpan: true }), kerbMat);
+    for (const [i0, c] of runs(n, (i) => t.kerbR[i] === 1)) this.add(ribbon(t, i0, c, () => hw - 0.05, () => hw + KERB_WIDTH, 0.05, { vScale: 0.25, uSpan: true }), kerbMat);
 
     // run-off surfaces (gravel / asphalt), grass is the ground
     const gravelMat = this.mat(T.gravel, { po: -1 });
@@ -152,7 +152,7 @@ export class TrackView {
       const outer = (i) => side * (hw + (side < 0 ? t.runL[i] : t.runR[i]));
       for (const tp of [1, 2]) {
         for (const [i0, c] of runs(n, (i) => type[i] === tp)) {
-          const g = side < 0 ? ribbon(t, i0, c, outer, inner, 0.01, { vScale: 0.1 }) : ribbon(t, i0, c, inner, outer, 0.01, { vScale: 0.1 });
+          const g = side < 0 ? ribbon(t, i0, c, outer, inner, -0.06, { vScale: 0.1 }) : ribbon(t, i0, c, inner, outer, -0.06, { vScale: 0.1 });
           this.add(g, tp === 1 ? gravelMat : runoffMat);
         }
       }
@@ -184,11 +184,11 @@ export class TrackView {
     const lane = (i) => t.pitLaneOffset(t.pitProgress(i * t.step));
     // pit lane surface
     const pitMat = this.mat(T.asphalt, { roughness: 0.75, color: 0xb8b8b8, po: -1 });
-    this.add(ribbon(t, i0, count, () => hw + 0.3, (i) => Math.max(hw + 0.3, lane(i) + 4.8), 0.008, { vScale: 0.08 }), pitMat);
+    this.add(ribbon(t, i0, count, () => hw + 0.3, (i) => Math.max(hw + 0.3, lane(i) + 4.8), -0.03, { vScale: 0.08 }), pitMat);
     // pit lane lines
     const lineMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
     const limS = this.sIdx(pt.entryS + pt.limitStart), limCount = Math.round((pt.limitEnd - pt.limitStart) / t.step);
-    this.add(ribbon(t, limS, limCount, (i) => lane(i) + 2.0, (i) => lane(i) + 2.2, 0.012), lineMat);
+    this.add(ribbon(t, limS, limCount, (i) => lane(i) + 2.0, (i) => lane(i) + 2.2, 0.02), lineMat);
     // pit wall
     const wallMat = new THREE.MeshStandardMaterial({ color: 0xd8d8d8, roughness: 0.6, side: THREE.DoubleSide });
     for (const [a, c] of runs(t.n, (i) => t.hasPitWall(i * t.step))) {
@@ -208,7 +208,7 @@ export class TrackView {
       const box = new THREE.Mesh(new THREE.PlaneGeometry(8, 4), new THREE.MeshStandardMaterial({ color: TEAMS[k].colors[0], roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, transparent: true, opacity: 0.55 }));
       box.rotation.x = -Math.PI / 2;
       box.rotation.z = -p.heading;
-      box.position.set(p.x, 0.015, p.z);
+      box.position.set(p.x, 0.02, p.z);
       this.group.add(box);
     }
     // garage building beyond the pit lane
@@ -244,7 +244,7 @@ export class TrackView {
   buildStartLine() {
     const t = this.track, hw = t.halfWidth;
     const i = this.sIdx(0);
-    const g = ribbon(t, i, 1, () => -hw, () => hw, 0.014, { vScale: 0.5 });
+    const g = ribbon(t, i, 1, () => -hw, () => hw, 0.035, { vScale: 0.5 });
     const ct = this.T.checker.clone(); ct.needsUpdate = true; ct.repeat.set(1, 1);
     this.add(g, new THREE.MeshStandardMaterial({ map: ct, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
     // grid boxes
@@ -255,14 +255,14 @@ export class TrackView {
       const f = t.toWorld(slot.s + 2.9, slot.d);
       bar.rotation.x = -Math.PI / 2;
       bar.rotation.z = -slot.heading;
-      bar.position.set(f.x, 0.015, f.z);
+      bar.position.set(f.x, 0.035, f.z);
       this.group.add(bar);
     }
     // DRS detection / activation lines
     for (const z of t.drsZones) {
       for (const s of [z.detect, z.start]) {
         const ii = this.sIdx(s);
-        this.add(ribbon(t, ii, 1, () => -t.halfWidth, () => t.halfWidth, 0.013, { vScale: 0.1 }), new THREE.MeshStandardMaterial({ color: s === z.detect ? 0xffffff : 0x33ff66, transparent: true, opacity: 0.6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
+        this.add(ribbon(t, ii, 1, () => -t.halfWidth, () => t.halfWidth, 0.035, { vScale: 0.1 }), new THREE.MeshStandardMaterial({ color: s === z.detect ? 0xffffff : 0x33ff66, transparent: true, opacity: 0.6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
       }
     }
   }
@@ -529,7 +529,7 @@ export class TrackView {
     for (let i = 0; i < n; i++) {
       const o = t.lineOff[i];
       const a = o - 0.35, b2 = o + 0.35;
-      pos.set([t.px[i] + t.rx[i] * a, 0.03, t.pz[i] + t.rz[i] * a, t.px[i] + t.rx[i] * b2, 0.03, t.pz[i] + t.rz[i] * b2], i * 6);
+      pos.set([t.px[i] + t.rx[i] * a, 0.06, t.pz[i] + t.rz[i] * a, t.px[i] + t.rx[i] * b2, 0.06, t.pz[i] + t.rz[i] * b2], i * 6);
       const j = i * 2, k = ((i + 1) % n) * 2;
       idx.push(j, j + 1, k, j + 1, k + 1, k);
     }

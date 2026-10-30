@@ -1,6 +1,6 @@
 // Menu screens rendered into #ui. All navigation goes through App callbacks.
 import { TRACKS } from '../data/tracks.js';
-import { TEAMS, DRIVERS } from '../data/teams.js';
+import { TEAMS, DRIVERS, teamAccent } from '../data/teams.js';
 import { Track } from '../sim/track.js';
 import { SETUP_GROUPS, SETUP_PRESETS, applyPreset, sanitizeSetup } from '../sim/setup.js';
 import { WEATHER_STATES } from '../sim/weather.js';
@@ -114,7 +114,7 @@ export class Menus {
       <div class="subtitle">Circuit</div>
       <div class="grid">${TRACKS.map((t) => `<div class="card ${q.track === t.id ? 'sel' : ''}" data-track="${t.id}">${trackSvg(t.id)}<h3>${esc(t.short)}</h3><p>${esc(t.location)} · ${(getTrack(t.id).length / 1000).toFixed(2)} km · ${t.laps} laps</p></div>`).join('')}</div>
       <div class="subtitle">Team</div>
-      <div class="grid tight">${TEAMS.map((t) => `<div class="card ${q.team === t.id ? 'sel' : ''}" data-team="${t.id}" style="border-left:5px solid ${t.colors[0]}"><h3 style="font-size:15px">${esc(t.name)}</h3><p>Rating ${teamRating(t.perf)} · ${DRIVERS.filter((d) => d.team === t.id).map((d) => d.short).join(' / ')}</p></div>`).join('')}</div>
+      <div class="grid tight">${TEAMS.map((t) => `<div class="card ${q.team === t.id ? 'sel' : ''}" data-team="${t.id}" style="border-left:5px solid ${teamAccent(t)}"><h3 style="font-size:15px">${esc(t.name)}</h3><p>Rating ${teamRating(t.perf)} · ${DRIVERS.filter((d) => d.team === t.id).map((d) => d.short).join(' / ')}</p></div>`).join('')}</div>
       <div class="cols" style="margin-top:16px">
         <div class="panel">
           <div class="field"><label>Weekend format</label>${seg('format', [['race', 'Race only'], ['qr', 'Qualifying + Race'], ['full', 'Full weekend']], q.format)}</div>
@@ -152,7 +152,7 @@ export class Menus {
       <div class="title"><span class="back" data-act="back">◀ Back</span>Time Trial</div>
       <div class="grid">${TRACKS.map((t) => `<div class="card ${q.track === t.id ? 'sel' : ''}" data-track="${t.id}">${trackSvg(t.id)}<h3>${esc(t.short)}</h3><p>Record: <b>${tt[t.id] ? formatTime(tt[t.id].time) : '—'}</b></p></div>`).join('')}</div>
       <div class="subtitle">Car</div>
-      <div class="grid tight">${TEAMS.map((t) => `<div class="card ${q.team === t.id ? 'sel' : ''}" data-team="${t.id}" style="border-left:5px solid ${t.colors[0]}"><h3 style="font-size:15px">${esc(t.name)}</h3><p>Rating ${teamRating(t.perf)}</p></div>`).join('')}</div>
+      <div class="grid tight">${TEAMS.map((t) => `<div class="card ${q.team === t.id ? 'sel' : ''}" data-team="${t.id}" style="border-left:5px solid ${teamAccent(t)}"><h3 style="font-size:15px">${esc(t.name)}</h3><p>Rating ${teamRating(t.perf)}</p></div>`).join('')}</div>
       <div class="row end" style="margin-top:16px"><button class="btn" data-act="setup">Car setup</button><button class="btn primary" data-act="start">Drive ▶</button></div>`);
     sc.addEventListener('click', (e) => {
       const tr = e.target.closest('[data-track]')?.dataset.track;
@@ -180,7 +180,7 @@ export class Menus {
     const stage = wk.stages[wk.stageIdx];
     const wx = this.app.previewWeather(wk);
     const fc = wx.upcoming(3600, 5).map((f) => `<div><b>${f.state.icon}</b>${f.t < 1 ? 'Now' : '+' + Math.round(f.t / 60) + 'm'}</div>`).join('');
-    const grid = wk.grid ? `<div class="panel"><div class="subtitle" style="margin-top:0">Starting grid</div><table class="tbl">${wk.grid.slice(0, 20).map((e, k) => `<tr class="${e.isPlayer ? 'me' : ''}"><td>${k + 1}</td><td><span class="teambar" style="background:${TEAMS.find((x) => x.id === e.team).colors[0]}"></span>${esc(e.driver.name)}</td></tr>`).join('')}</table></div>` : '';
+    const grid = wk.grid ? `<div class="panel"><div class="subtitle" style="margin-top:0">Starting grid</div><table class="tbl">${wk.grid.slice(0, 20).map((e, k) => `<tr class="${e.isPlayer ? 'me' : ''}"><td>${k + 1}</td><td><span class="teambar" style="background:${teamAccent(TEAMS.find((x) => x.id === e.team))}"></span>${esc(e.driver.name)}</td></tr>`).join('')}</table></div>` : '';
     const sc = this.set(`
       <div class="title"><span class="back" data-act="quit">◀ ${wk.mode === 'career' ? 'Career' : 'Quit'}</span>${esc(t.name)}</div>
       <div class="cols">
@@ -240,11 +240,11 @@ export class Menus {
     let head, rows;
     if (type === 'race') {
       head = '<tr><th>Pos</th><th>Driver</th><th>Team</th><th class="num">Time / Gap</th><th class="num">Best lap</th><th>Stops</th><th class="num">Pen</th><th class="num">Grid</th></tr>';
-      rows = res.map((r) => `<tr class="${r.isPlayer ? 'me' : ''}"><td>${r.status === 'DNF' ? 'DNF' : r.pos}</td><td><span class="teambar" style="background:${r.team.colors[0]}"></span>${esc(r.driver.name)}${r.fastest ? ' <span class="pill" style="background:rgba(177,76,255,.25);color:#d9a6ff">FL</span>' : ''}</td><td>${esc(r.team.short)}</td><td class="num">${esc(r.status === 'DNF' ? (r.reason ?? 'DNF') : r.gap)}</td><td class="num">${formatTime(r.bestLap)}</td><td>${r.comp.tyreHistory.map((h) => `<span class="tyre" style="color:${COMPOUNDS[h.compound].color};width:16px;height:16px;border-width:2px;font-size:8px"><b>${h.compound}</b></span>`).join('')}</td><td class="num">${r.penalties ? r.penalties + 's' : ''}</td><td class="num">${r.grid}</td></tr>`).join('');
+      rows = res.map((r) => `<tr class="${r.isPlayer ? 'me' : ''}"><td>${r.status === 'DNF' ? 'DNF' : r.pos}</td><td><span class="teambar" style="background:${teamAccent(r.team)}"></span>${esc(r.driver.name)}${r.fastest ? ' <span class="pill" style="background:rgba(177,76,255,.25);color:#d9a6ff">FL</span>' : ''}</td><td>${esc(r.team.short)}</td><td class="num">${esc(r.status === 'DNF' ? (r.reason ?? 'DNF') : r.gap)}</td><td class="num">${formatTime(r.bestLap)}</td><td>${r.comp.tyreHistory.map((h) => `<span class="tyre" style="color:${COMPOUNDS[h.compound].color};width:16px;height:16px;border-width:2px;font-size:8px"><b>${h.compound}</b></span>`).join('')}</td><td class="num">${r.penalties ? r.penalties + 's' : ''}</td><td class="num">${r.grid}</td></tr>`).join('');
     } else {
       head = `<tr><th>Pos</th><th>Driver</th><th>Team</th><th class="num">Best lap</th><th class="num">Gap</th>${type === 'qualifying' ? '<th>Out in</th>' : '<th class="num">Laps</th>'}</tr>`;
       const best = res[0]?.time;
-      rows = res.map((r) => `<tr class="${r.isPlayer ? 'me' : ''}"><td>${r.pos}</td><td><span class="teambar" style="background:${r.team.colors[0]}"></span>${esc(r.driver.name)}</td><td>${esc(r.team.short)}</td><td class="num">${formatTime(r.time)}</td><td class="num">${r.time && best && r.pos > 1 ? '+' + (r.time - best).toFixed(3) : ''}</td>${type === 'qualifying' ? `<td>${esc(r.eliminated ?? '')}</td>` : `<td class="num">${r.laps ?? ''}</td>`}</tr>`).join('');
+      rows = res.map((r) => `<tr class="${r.isPlayer ? 'me' : ''}"><td>${r.pos}</td><td><span class="teambar" style="background:${teamAccent(r.team)}"></span>${esc(r.driver.name)}</td><td>${esc(r.team.short)}</td><td class="num">${formatTime(r.time)}</td><td class="num">${r.time && best && r.pos > 1 ? '+' + (r.time - best).toFixed(3) : ''}</td>${type === 'qualifying' ? `<td>${esc(r.eliminated ?? '')}</td>` : `<td class="num">${r.laps ?? ''}</td>`}</tr>`).join('');
     }
     const me = res.find((r) => r.isPlayer);
     const title = { race: 'Race Classification', qualifying: 'Qualifying Results', practice: 'Practice Times', timetrial: 'Time Trial' }[type];
@@ -296,14 +296,14 @@ export class Menus {
     const perf = playerPerf(c);
     const tab = this.careerTab ?? 'standings';
     const standings = `<div class="row" style="margin-bottom:8px">${seg('ctab', [['standings', 'Drivers'], ['teams', 'Constructors'], ['calendar', 'Calendar'], ['rd', 'R&D']], tab)}</div>
-      ${tab === 'standings' ? `<table class="tbl">${ds.map((r, k) => `<tr class="${r.isPlayer ? 'me' : ''}"><td>${k + 1}</td><td><span class="teambar" style="background:${TEAMS.find((x) => x.id === r.team).colors[0]}"></span>${esc(r.name)}</td><td class="num">${r.pts}</td></tr>`).join('')}</table>` : ''}
-      ${tab === 'teams' ? `<table class="tbl">${ts.map((r, k) => `<tr class="${r.id === c.teamId ? 'me' : ''}"><td>${k + 1}</td><td><span class="teambar" style="background:${r.colors[0]}"></span>${esc(r.name)}</td><td class="num">${r.pts}</td></tr>`).join('')}</table>` : ''}
+      ${tab === 'standings' ? `<table class="tbl">${ds.map((r, k) => `<tr class="${r.isPlayer ? 'me' : ''}"><td>${k + 1}</td><td><span class="teambar" style="background:${teamAccent(TEAMS.find((x) => x.id === r.team))}"></span>${esc(r.name)}</td><td class="num">${r.pts}</td></tr>`).join('')}</table>` : ''}
+      ${tab === 'teams' ? `<table class="tbl">${ts.map((r, k) => `<tr class="${r.id === c.teamId ? 'me' : ''}"><td>${k + 1}</td><td><span class="teambar" style="background:${teamAccent(r)}"></span>${esc(r.name)}</td><td class="num">${r.pts}</td></tr>`).join('')}</table>` : ''}
       ${tab === 'calendar' ? `<table class="tbl">${c.calendar.map((id, k) => { const h = c.history.find((x) => x.round === k + 1); const tt = TRACKS.find((x) => x.id === id); return `<tr class="${k === c.round ? 'me' : ''}"><td>R${k + 1}</td><td>${esc(tt.short)}</td><td>${h ? (h.playerPos ? ordinal(h.playerPos) : 'DNF') : k === c.round ? 'Next' : ''}</td></tr>`; }).join('')}</table>` : ''}
       ${tab === 'rd' ? `<div style="margin-bottom:8px">Resource points: <b style="color:var(--accent2)">${c.resources}</b></div>${RD_TREE.map((r) => { const lvl = c.upgrades[r.id]; const cost = upgradeCost(c, r.id); return `<div class="field"><label>${esc(r.name)} <span class="pill">Lv ${lvl}/${RD_LEVELS}</span></label><button class="btn small ${cost != null && c.resources >= cost ? 'primary' : ''}" data-buy="${r.id}" ${cost == null || c.resources < cost ? 'disabled' : ''}>${cost == null ? 'Maxed' : `Upgrade · ${cost}`}</button><span class="hint">${esc(r.desc)} +${(RD_GAIN * 100).toFixed(1)}% per level · now ${(perf[r.stat] * 100).toFixed(1)}</span></div>`; }).join('')}` : ''}`;
     const sc = this.set(`
       <div class="title"><span class="back" data-act="back">◀ Menu</span>Career — Season ${c.season}</div>
       <div class="row" style="margin-bottom:12px">
-        <span class="stat" style="border-left:4px solid ${team.colors[0]}"><b>${esc(c.driver.name)}</b><span>${esc(team.name)} #${c.driver.number}</span></span>
+        <span class="stat" style="border-left:4px solid ${teamAccent(team)}"><b>${esc(c.driver.name)}</b><span>${esc(team.name)} #${c.driver.number}</span></span>
         <span class="stat"><b>${myPos ? ordinal(myPos) : '-'}</b><span>Championship</span></span>
         <span class="stat"><b>${c.standings.drivers.player ?? 0}</b><span>Points</span></span>
         <span class="stat"><b>${c.resources}</b><span>Resources</span></span>
@@ -340,7 +340,7 @@ export class Menus {
           <div class="field"><label>Qualifying</label>${seg('quali', [['short', 'Short'], ['full', 'Q1·Q2·Q3'], ['oneshot', 'One-shot']], st.quali)}</div>
         </div>
         <div class="panel"><div class="subtitle" style="margin-top:0">Choose your team</div>
-          <div class="grid tight">${TEAMS.map((t) => `<div class="card ${st.teamId === t.id ? 'sel' : ''}" data-team="${t.id}" style="border-left:5px solid ${t.colors[0]}"><h3 style="font-size:15px">${esc(t.name)}</h3><p>Rating ${teamRating(t.perf)} · ${t.perf.reliability >= 0.93 ? 'Reliable' : 'Fragile'}</p></div>`).join('')}</div>
+          <div class="grid tight">${TEAMS.map((t) => `<div class="card ${st.teamId === t.id ? 'sel' : ''}" data-team="${t.id}" style="border-left:5px solid ${teamAccent(t)}"><h3 style="font-size:15px">${esc(t.name)}</h3><p>Rating ${teamRating(t.perf)} · ${t.perf.reliability >= 0.93 ? 'Reliable' : 'Fragile'}</p></div>`).join('')}</div>
           <p style="color:var(--muted);font-size:12px">You replace the team's second driver. Lower-rated teams expect less — beat expectations to earn more resources.</p>
           <div class="row end"><button class="btn primary" data-act="create">Sign contract ▶</button></div>
         </div>

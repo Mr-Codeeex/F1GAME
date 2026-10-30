@@ -1,0 +1,10 @@
+{
+  "appId": "com.apexgp.game",
+  "appName": "Apex Grand Prix",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#0b0d10"
+  }
+}

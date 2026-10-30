@@ -27,6 +27,7 @@ export class InputManager {
   constructor(settings = {}) {
     this.settings = settings;
     this.keys = new Set();
+    this.tapped = new Set(); // keys pressed since the last poll (taps shorter than a frame)
     this.prev = {};
     this.state = { throttle: 0, brake: 0, steer: 0, drs: false, overtake: false, lookBack: false };
     this.touch = { left: false, right: false, throttle: false, brake: false, drs: false, overtake: false, lookBack: false, taps: new Set() };
@@ -39,6 +40,7 @@ export class InputManager {
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
       if (['Tab', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Backspace'].includes(e.code) && this.enabled) e.preventDefault();
       this.keys.add(e.code);
+      if (!e.repeat) this.tapped.add(e.code);
       this.lastDevice = 'keyboard';
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
@@ -54,6 +56,10 @@ export class InputManager {
 
   key(action) {
     return KEYMAP[action]?.some((k) => this.keys.has(k)) ?? false;
+  }
+
+  tappedKey(action) {
+    return KEYMAP[action]?.some((k) => this.tapped.has(k)) ?? false;
   }
 
   /** Called by the touch UI */
@@ -126,10 +132,11 @@ export class InputManager {
     // edges
     for (const a of EDGE_ACTIONS) {
       const held = this.key(a) || !!gp?.[a];
-      out[a] = (held && !this.prev[a]) || this.touch.taps.has(a);
+      out[a] = (held && !this.prev[a]) || this.touch.taps.has(a) || (this.tappedKey(a) && !this.prev[a]);
       this.prev[a] = held;
     }
     this.touch.taps.clear();
+    this.tapped.clear();
     if (!this.enabled) { out.throttle = 0; out.brake = 0; out.steer = 0; }
     this.state = Object.assign(st, out);
     return out;

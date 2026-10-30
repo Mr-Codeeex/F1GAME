@@ -4,6 +4,7 @@
 import { formatTime, formatGap, clamp } from '../sim/util.js';
 import { COMPOUNDS, DRY_COMPOUNDS } from '../sim/tyres.js';
 import { ERS_MODES, FUEL_MIXES, RPM_MAX } from '../sim/car.js';
+import { teamAccent } from '../data/teams.js';
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
@@ -120,7 +121,7 @@ export class Hud {
     for (const c of s.comps) {
       if (c.status !== 'running' || c.isPlayer) continue;
       const [x, y] = this.mapXf(c.car.x, c.car.z);
-      g.fillStyle = c.team.colors[0]; g.strokeStyle = c.retired ? '#ff3b4e' : '#fff'; g.lineWidth = 2;
+      g.fillStyle = teamAccent(c.team); g.strokeStyle = c.retired ? '#ff3b4e' : '#fff'; g.lineWidth = 2;
       g.beginPath(); g.arc(x, y, 7, 0, Math.PI * 2); g.fill(); g.stroke();
     }
     const p = s.player;
@@ -324,7 +325,7 @@ export class Hud {
       }
       const comp = COMPOUNDS[c.car.tyres.compound];
       const cls = ['r', me ? 'me' : '', c.retired || c.quali.eliminated ? 'out' : '', gap === 'PIT' ? 'pit' : '', c.car.drsOpen ? 'drs' : ''].join(' ');
-      rows.push(`<div class="${cls}"><span class="pos">${c.position}</span><span class="tb" style="background:${c.team.colors[0]}"></span><span class="nm">${esc(c.driver.short)}</span><span class="gp">${gap}</span><span class="ty" style="border-color:${comp.color}"></span></div>`);
+      rows.push(`<div class="${cls}"><span class="pos">${c.position}</span><span class="tb" style="background:${teamAccent(c.team)}"></span><span class="nm">${esc(c.driver.short)}</span><span class="gp">${gap}</span><span class="ty" style="border-color:${comp.color}"></span></div>`);
     }
     this.el.tower.innerHTML = hdr + rows.join('');
   }
@@ -356,7 +357,7 @@ export class Hud {
       if (d2 > 120 * 120 || d2 < 9) continue;
       const sp = ctx.renderer.project(c.car.x, 1.6, c.car.z);
       if (!sp) continue;
-      out.push(`<div style="left:${sp.x | 0}px;top:${sp.y | 0}px;border-color:${c.team.colors[0]};opacity:${clamp(1.4 - Math.sqrt(d2) / 100, 0.3, 1).toFixed(2)}">P${c.position} ${esc(c.driver.short)}</div>`);
+      out.push(`<div style="left:${sp.x | 0}px;top:${sp.y | 0}px;border-color:${teamAccent(c.team)};opacity:${clamp(1.4 - Math.sqrt(d2) / 100, 0.3, 1).toFixed(2)}">P${c.position} ${esc(c.driver.short)}</div>`);
     }
     el.innerHTML = out.join('');
   }

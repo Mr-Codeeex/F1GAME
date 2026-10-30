@@ -168,7 +168,7 @@ table.tbl td.num { font-family: var(--mono); text-align: right; }
 .h-flag.chequered { background: repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0 0/16px 16px !important; color: #e8102e; text-shadow: 0 0 6px #fff; }
 .h-flag.blackwhite { background: linear-gradient(135deg, #111 50%, #fff 50%) !important; color: #e8102e; }
 .h-banner { top: 30%; left: 50%; transform: translateX(-50%); font-size: clamp(20px, 4vw, 40px); font-weight: 900; font-style: italic; text-shadow: 0 2px 16px rgba(0,0,0,0.8); text-align: center; white-space: nowrap; transition: opacity .3s; }
-.h-radio { left: calc(260px + var(--safe-l)); top: 12px; width: min(360px, 40vw); display: flex; flex-direction: column; gap: 6px; }
+.h-radio { position: absolute; right: calc(10px + var(--safe-r)); top: 132px; width: min(330px, 36vw); display: flex; flex-direction: column; gap: 6px; }
 .h-radio div { background: var(--panel); border-left: 3px solid var(--accent2); padding: 7px 10px; border-radius: 6px; font-size: 13px; line-height: 1.35; animation: slidein .25s; }
 .h-radio div.penalty { border-left-color: var(--accent); } .h-radio div.warning { border-left-color: var(--yellow); } .h-radio div.info { border-left-color: var(--muted); font-size: 12px; }
 .h-radio div small { display: block; font-size: 10px; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; }
@@ -181,7 +181,7 @@ table.tbl td.num { font-family: var(--mono); text-align: right; }
 .h-tags { position: absolute; inset: 0; }
 .h-tags div { position: absolute; transform: translate(-50%, -100%); font-size: 11px; font-weight: 800; padding: 1px 6px; border-radius: 4px; background: rgba(0,0,0,0.55); white-space: nowrap; border-bottom: 2px solid #fff; }
 .h-fps { position: absolute; right: 8px; top: 50%; font-family: var(--mono); font-size: 11px; color: var(--muted); }
-.h-mfd { position: absolute; right: calc(10px + var(--safe-r)); top: 120px; width: min(340px, 92vw); max-height: calc(100vh - 340px); overflow-y: auto; padding: 12px; pointer-events: auto; font-size: 13px; }
+.h-mfd { position: absolute; left: calc(256px + var(--safe-l)); top: 64px; z-index: 2; width: min(340px, 92vw); max-height: calc(100vh - 340px); overflow-y: auto; padding: 12px; pointer-events: auto; font-size: 13px; }
 .h-mfd h4 { margin: 4px 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); }
 .h-mfd .seg button { font-size: 12px; padding: 6px 9px; }
 .h-mfd .row { margin-bottom: 8px; }
@@ -199,7 +199,7 @@ table.tbl td.num { font-family: var(--mono); text-align: right; }
   .h-info { min-width: 150px; padding: 5px 8px; } .h-info .big { font-size: 18px; } .h-info .lines { font-size: 11px; }
   .h-map { width: 120px; height: 120px; bottom: auto; top: 128px; }
   .h-tyres { display: none; }
-  .h-radio { left: 50%; transform: translateX(-50%); top: auto; bottom: 120px; width: 70vw; }
+  .h-radio { left: 50%; right: auto; transform: translateX(-50%); top: auto; bottom: 120px; width: 70vw; }
   .h-radio div { font-size: 12px; padding: 5px 8px; }
   .h-dash { width: min(440px, 64vw); bottom: calc(6px + var(--safe-b)); padding: 5px 10px 6px; }
   .h-speed b { font-size: 28px; } .h-gear { font-size: 34px; width: 40px; }
@@ -208,6 +208,7 @@ table.tbl td.num { font-family: var(--mono); text-align: right; }
 }
 body.touch .h-dash { bottom: calc(6px + var(--safe-b)); }
 body.touch .h-tower .r:nth-child(n+9):not(.me) { display: none; }
+@media (max-height: 640px) { .h-tower .r:nth-child(n+14):not(.me) { display: none; } .h-radio { top: 116px; } }
 
 /* ---------------------------------------------------------------- touch controls */
 #touch { position: fixed; inset: 0; z-index: 15; pointer-events: none; }

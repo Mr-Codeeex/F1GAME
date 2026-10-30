@@ -98,7 +98,7 @@ function sharedGeometry() {
   const rimR = new THREE.CylinderGeometry(0.22, 0.22, 0.44, 10); rimR.rotateX(Math.PI / 2);
   const disc = new THREE.CircleGeometry(0.16, 12); disc.translate(0, 0, -0.18);
   const rainLight = box(0.04, 0.08, 0.14, -2.6, 0.32, 0);
-  const shadow = new THREE.PlaneGeometry(5.4, 2.1); shadow.rotateX(-Math.PI / 2); shadow.translate(-0.1, 0.01, 0);
+  const shadow = new THREE.PlaneGeometry(5.4, 2.1); shadow.rotateX(-Math.PI / 2); shadow.translate(-0.1, 0.07, 0);
   SHARED = { body, accent, carbon, halo, helmet, visor, flap, tyreF, tyreR, ringF, ringR, rimF, rimR, disc, rainLight, shadow };
   return SHARED;
 }

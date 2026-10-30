@@ -40,3 +40,11 @@ export const POINTS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 
 export const teamById = (id) => TEAMS.find((t) => t.id === id) ?? TEAMS[0];
 export const teamIndex = (id) => Math.max(0, TEAMS.findIndex((t) => t.id === id));
+
+/** A team colour that stays visible on dark UI backgrounds. */
+export function teamAccent(team) {
+  const c = team.colors[0];
+  const n = parseInt(c.slice(1), 16);
+  const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return lum < 0.18 ? team.colors[1] : c;
+}

@@ -32,6 +32,7 @@ class App {
     this.towerMode = 'interval';
     this.last = performance.now();
     this.fps = 60;
+    this.prof = { sim: 0, render: 0, frames: 0 };
     if (isTouch) document.body.classList.add('touch');
     document.body.insertAdjacentHTML('beforeend', '<div class="rotate-hint">Rotate your device to landscape to race.</div>');
     document.addEventListener('visibilitychange', () => { if (document.hidden && this.session && !this.paused && !this.skipping) this.pause(); });
@@ -67,6 +68,8 @@ class App {
   }
 
   qualityLevel() {
+    const forced = new URLSearchParams(location.search).get('q');
+    if (['low', 'medium', 'high'].includes(forced)) return forced;
     const q = this.save.settings.quality;
     if (q !== 'auto') return q;
     if (isTouch) return Math.min(screen.width, screen.height) < 500 ? 'low' : 'medium';
@@ -260,6 +263,7 @@ class App {
       this.renderer.loadTrack(track);
     }
     this.renderer.setSession(session);
+    this.renderer.garageTeam = session.player?.teamIndex ?? 0;
     this.cfg = cfg;
     this.onSessionEnd = onEnd;
     this.session = session;
@@ -305,7 +309,7 @@ class App {
     this.audio.silence();
     const s = this.session;
     this.menus.pause(s, {
-      resume: () => { this.paused = false; this.menus.clear(); },
+      resume: () => { this.paused = false; this.input.tapped.clear(); this.menus.clear(); },
       restart: () => { const cfg = this.cfg, cb = this.onSessionEnd; this.endSessionUI(); this.startSession(cfg, cb); },
       skip: () => { this.paused = false; this.menus.clear(); this.skipSession(); },
       quit: () => {
@@ -411,7 +415,9 @@ class App {
         }
       }
       s.setPlayerInput(inp);
+      const t0 = performance.now();
       s.update(dt);
+      this.prof.sim += performance.now() - t0;
     }
     // events
     const contacts = [];
@@ -451,7 +457,10 @@ class App {
     if (s.type === 'race' && p && (p.retired) && s.order) focus = s.order.find((c) => !c.retired && c.status === 'running') ?? focus;
     const lineProfile = p?.ai?.profile;
     this.renderer.update(dt, focus, { lookBack: inp.lookBack, lineMode: p && p.status === 'running' && !this.paused ? settings.assists.line : 'off', lineProfile, ghostPose, contacts });
+    const t1 = performance.now();
     this.renderer.render();
+    this.prof.render += performance.now() - t1;
+    this.prof.frames++;
     this.hud.update(dt, { input: inp, renderer: this.renderer, delta, ghostTime: s.type === 'timetrial' ? this.save.timeTrial[s.track.id]?.time : null, fps: this.fps });
     if (focus) {
       const cam = this.renderer.camera;

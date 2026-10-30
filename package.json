@@ -1,1 +1,20 @@
-{"type":"module"}
+{
+  "name": "apex-grand-prix",
+  "version": "1.0.0",
+  "description": "Apex Grand Prix — formula racing simulator for PC and Android (WebGL / PWA).",
+  "type": "module",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "node tools/serve.mjs 8080",
+    "test": "node --test test/sim.test.mjs",
+    "test:e2e": "node test/e2e-smoke.cjs",
+    "tracks": "node tools/preview-tracks.mjs tools/out",
+    "lapsim": "node tools/lapsim.mjs",
+    "racesim": "node tools/racesim.mjs",
+    "build": "node tools/build-web.mjs",
+    "android:sync": "node tools/build-web.mjs && npx cap sync android",
+    "android:open": "npx cap open android"
+  },
+  "engines": { "node": ">=18" }
+}
