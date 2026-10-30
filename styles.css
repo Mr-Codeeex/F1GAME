@@ -214,18 +214,38 @@ body.touch .h-tower .r:nth-child(n+9):not(.me) { display: none; }
 #touch { position: fixed; inset: 0; z-index: 15; pointer-events: none; }
 .tbtn { position: absolute; pointer-events: auto; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.22); color: rgba(255,255,255,0.85); font-weight: 900; border-radius: 16px; touch-action: none; backdrop-filter: blur(2px); font-size: 15px; }
 .tbtn.on { background: rgba(255,255,255,0.32); }
-.t-left { left: calc(14px + var(--safe-l)); bottom: calc(20px + var(--safe-b)); width: 21vw; height: 30vh; font-size: 30px; }
-.t-right { left: calc(18px + 21vw + var(--safe-l)); bottom: calc(20px + var(--safe-b)); width: 21vw; height: 30vh; font-size: 30px; }
-.t-throttle { right: calc(14px + var(--safe-r)); bottom: calc(20px + var(--safe-b)); width: 15vw; height: 42vh; background: rgba(34,211,107,0.18); border-color: rgba(34,211,107,0.5); }
-.t-brake { right: calc(18px + 15vw + var(--safe-r)); bottom: calc(20px + var(--safe-b)); width: 15vw; height: 28vh; background: rgba(232,16,46,0.18); border-color: rgba(232,16,46,0.5); }
-.t-drs { right: calc(18px + 15vw + var(--safe-r)); bottom: calc(26px + 28vh + var(--safe-b)); width: 15vw; height: 11vh; font-size: 13px; }
-.t-ot { right: calc(14px + var(--safe-r)); bottom: calc(26px + 42vh + var(--safe-b)); width: 15vw; height: 9vh; font-size: 13px; }
-.t-ers { right: calc(18px + 15vw + var(--safe-r)); bottom: calc(32px + 39vh + var(--safe-b)); width: 15vw; height: 9vh; font-size: 12px; }
-.t-pit, .t-cam, .t-mfd, .t-pause { top: 50%; width: 52px; height: 44px; border-radius: 12px; font-size: 14px; }
-.t-pause { left: calc(10px + var(--safe-l)); top: auto; bottom: calc(24px + 30vh + var(--safe-b)); }
-.t-cam { left: calc(68px + var(--safe-l)); top: auto; bottom: calc(24px + 30vh + var(--safe-b)); }
-.t-mfd { left: calc(126px + var(--safe-l)); top: auto; bottom: calc(24px + 30vh + var(--safe-b)); }
-.t-pit { left: calc(184px + var(--safe-l)); top: auto; bottom: calc(24px + 30vh + var(--safe-b)); }
+.t-left { left: calc(12px + var(--safe-l)); bottom: calc(14px + var(--safe-b)); width: 17vw; height: 34vh; font-size: 28px; }
+.t-right { left: calc(18px + 17vw + var(--safe-l)); bottom: calc(14px + var(--safe-b)); width: 17vw; height: 34vh; font-size: 28px; }
+.t-throttle { right: calc(12px + var(--safe-r)); bottom: calc(14px + var(--safe-b)); width: 13vw; height: 46vh; background: rgba(34,211,107,0.18); border-color: rgba(34,211,107,0.5); }
+.t-brake { right: calc(18px + 13vw + var(--safe-r)); bottom: calc(14px + var(--safe-b)); width: 13vw; height: 34vh; background: rgba(232,16,46,0.18); border-color: rgba(232,16,46,0.5); }
+.t-drs { right: calc(18px + 13vw + var(--safe-r)); bottom: calc(20px + 34vh + var(--safe-b)); width: 13vw; height: 10vh; min-height: 34px; font-size: 12px; }
+.t-ot { right: calc(12px + var(--safe-r)); bottom: calc(20px + 46vh + var(--safe-b)); width: 13vw; height: 10vh; min-height: 34px; font-size: 12px; }
+.t-ers { right: calc(18px + 13vw + var(--safe-r)); bottom: calc(26px + 44vh + var(--safe-b)); width: 13vw; height: 10vh; min-height: 34px; font-size: 12px; }
+.t-pit, .t-cam, .t-mfd, .t-pause { width: 46px; height: 38px; border-radius: 10px; font-size: 13px; bottom: auto; }
+.t-pause { left: calc(10px + var(--safe-l)); top: 186px; }
+.t-cam { left: calc(62px + var(--safe-l)); top: 186px; }
+.t-mfd { left: calc(114px + var(--safe-l)); top: 186px; }
+.t-pit { left: calc(166px + var(--safe-l)); top: 186px; }
+
+/* touch HUD: keep the centre of the screen clear between the steering buttons and pedals */
+body.touch #hud .h-dash { width: 28vw; min-width: 220px; bottom: calc(6px + var(--safe-b)); padding: 4px 8px 5px; gap: 6px; grid-template-columns: auto auto 1fr; }
+body.touch #hud .h-speed b { font-size: 24px; }
+body.touch #hud .h-gear { font-size: 28px; width: 30px; }
+body.touch #hud .h-pedals, body.touch #hud #h-fuel, body.touch #hud #h-bias { display: none; }
+body.touch #hud .h-right { font-size: 10px; gap: 3px; }
+body.touch #hud .h-chip { font-size: 9px; padding: 1px 4px; }
+body.touch #hud .h-rpm { height: 6px; }
+body.touch #hud .h-map, body.touch #hud .h-tyres { display: none; }
+body.touch #hud .h-radio { left: 50%; right: auto; transform: translateX(-50%); top: 52px; bottom: auto; width: 44vw; }
+body.touch #hud .h-radio div { font-size: 11px; padding: 4px 8px; }
+body.touch #hud .h-radio div small { display: none; }
+body.touch #hud .h-radio div:nth-last-child(n+3) { display: none; }
+body.touch #hud .h-tower { width: 160px; }
+body.touch #hud .h-info { min-width: 130px; }
+body.touch #hud .h-mfd { left: 50%; transform: translateX(-50%); top: 40px; max-height: calc(100vh - 60px); }
+body.touch #hud .h-flag { top: 52px; font-size: 12px; padding: 4px 14px; }
+body.touch #hud .h-garage { bottom: 8px; padding: 10px; }
+body.touch #touch.garage { display: none; }
 
 #toast { position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%); z-index: 60; background: #1d232c; border: 1px solid var(--line); padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .25s; pointer-events: none; }
 #toast.show { opacity: 1; }

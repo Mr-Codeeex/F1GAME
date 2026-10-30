@@ -452,6 +452,7 @@ class App {
         }
       }
     }
+    if (isTouch) document.getElementById('touch').classList.toggle('garage', !p || p.status !== 'running');
     // camera focus
     let focus = p && p.status === 'running' ? p : null;
     if (s.type === 'race' && p && (p.retired) && s.order) focus = s.order.find((c) => !c.retired && c.status === 'running') ?? focus;

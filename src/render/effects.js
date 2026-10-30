@@ -65,7 +65,7 @@ export class Effects {
   constructor(scene, textures, quality = 'high') {
     this.scene = scene;
     const q = quality === 'low' ? 0.4 : quality === 'medium' ? 0.7 : 1;
-    this.spray = new ParticlePool(Math.round(1400 * q), pointMaterial(textures.sprite, 0xdfe6ee, 0.28), { drag: 0.35, grow: 2.5, gravity: 1 });
+    this.spray = new ParticlePool(Math.round(1400 * q), pointMaterial(textures.sprite, 0xdfe6ee, 0.14), { drag: 0.35, grow: 1.6, gravity: 1 });
     this.smoke = new ParticlePool(Math.round(600 * q), pointMaterial(textures.sprite, 0xcfcfcf, 0.45), { drag: 0.5, grow: 2.2, gravity: -0.4 });
     this.sparks = new ParticlePool(Math.round(300 * q), pointMaterial(textures.sprite, 0xffb040, 1, true), { drag: 0.6, gravity: 9 });
     this.dust = new ParticlePool(Math.round(400 * q), pointMaterial(textures.sprite, 0xb59a74, 0.5), { drag: 0.5, grow: 2.5, gravity: 0.5 });

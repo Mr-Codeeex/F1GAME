@@ -234,7 +234,7 @@ export class GameRenderer {
     this.skyUniforms.horizon.value.copy(SKY_CLEAR.horizon).lerp(SKY_RAIN.horizon, mix);
     this.skyUniforms.sunAmt.value = (wx.sun ?? 1) * (1 - r);
     this.scene.fog.color.copy(SKY_CLEAR.fog).lerp(SKY_RAIN.fog, mix);
-    this.scene.fog.near = lerp(400, 60, r);
+    this.scene.fog.near = lerp(400, 90, r);
     this.scene.fog.far = lerp(4500, 900, r);
     this.sun.intensity = lerp(2.6, 0.35, Math.max(r, cloud * 0.8));
     this.hemi.intensity = lerp(0.9, 1.25, mix);
